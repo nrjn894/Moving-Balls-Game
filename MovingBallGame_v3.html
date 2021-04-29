@@ -1,0 +1,254 @@
+                              <!-- This is code for making a game through javascript-->
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #wrapper{
+                position: :relative;
+            }
+            canvas{
+                border: 1px solid black;
+                margin : 100px 180px;
+                position : absolute;
+                
+            }
+            
+            #background{
+                z-index: -1;
+            }
+            
+            #mycanvas{
+                z-index: 0;
+            }
+        </style>
+    </head>
+    <body >
+        <div id="wrapper">       <!--wrapper class for both the canvases so as to align them one avobe other-->
+            <canvas id="background" width="900" height="563" ></canvas>
+            <canvas id="mycanvas" width="900" height="563" ></canvas>
+        </div>
+        
+        <button onclick ="myfunction()">Click me</button>
+        
+        <script>
+            
+            //Getting the context of canvas having id as bankground and setting the background image for that
+            
+            const canvasBack = document.getElementById("background");
+            const contextBack = canvasBack.getContext("2d");
+            var background = new Image();
+            background.src = "images/image1.jpg" ;
+            background.onload = function(){
+                contextBack.drawImage(background,0,0,canvasBack.width,canvasBack.height);   
+            }
+            //-----------------------------------------------------------------------------------------------------------------------
+            
+            
+            //Getting the context of canvas having id as mycanvas
+            const canvas = document.getElementById("mycanvas");
+            const context = canvas.getContext("2d");
+            //-----------------------------------------------------------------------------------------------------------------------
+            
+            
+            //Drawing the sharp needles(thorns) in mycanvas on the right internal side
+            for (var i = 3; i <= canvas.height ; i+=6){
+                context.beginPath();
+                context.moveTo(canvas.width-8 , i);
+                context.lineTo(canvas.width , i-3);
+                context.moveTo(canvas.width-8 , i);
+                context.lineTo(canvas.width , i+3);
+                context.strokeStyle = "red";
+                context.stroke();
+            }
+            //-----------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            //Adding the event to the mycanvas which will call the function MouseWheelHandler when the mouse scroll happens in canvas
+            if (canvas.addEventListener) {
+	           canvas.addEventListener("mousewheel", MouseWheelHandler, false);
+	           canvas.addEventListener("DOMMouseScroll", MouseWheelHandler, false);
+            }
+            else canvas.attachEvent("onmousewheel", MouseWheelHandler);
+            //-----------------------------------------------------------------------------------------------------------------------
+    
+            
+            
+            //Declaring the array which will contain all the objects of blob class created after clicking on button
+            var Blobs = new Array();
+            //----------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            //variable colorswitch which will change the color every time new blob object is created
+            var colorSwitch = 0;
+            //----------------------------------------------------------------------------------------------------------------------
+            
+            //variable which will contain the mouse scroll direction at the moment
+            var mouseScrollDirection = 1;
+            //----------------------------------------------------------------------------------------------------------------------
+            
+            
+            /*Declaration of class Bar having variables and methods as below:
+            y                  =  position of bar vertically relative to mycanvas in pixels
+            height             =  height of the bar
+            width              =  width of the bar
+            x                  =  position of bar horizontally relative to mycanvas in pixels
+            color              =  color of the bar
+            draw()             = function that will draw the bar in the canvas and fill it with the specified color
+            moveBarWithMouse() = function that change the position of bar vertically according to the mouse scroll*/
+            
+            class Bar{
+                constructor(){
+                    this.y = 0;
+                    this.height = 200;
+                    this.width = 20;
+                    this.x = canvas.width-this.width-10;
+                    this.color = "yellow";
+                }
+                
+               
+                draw(){
+                    context.fillRect(this.x,this.y,this.width,this.height);
+                    context.fillStyle = this.color;
+                    //context.fill();
+                }
+            
+                moveBarWithMouse(){
+                    var speed = 40;
+                    var newY = this.y + mouseScrollDirection*speed;
+                    if( newY < 0){
+                        newY = 0;
+                    }
+                    else if(newY > canvas.height-this.height){
+                        newY = canvas.height-this.height;
+                    }
+                    this.y = newY;
+                }
+                
+            }
+            
+            var bar = new Bar();
+            
+            //----------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            /*Declarationof the Blob class having variables and methods as below
+            size         =  radious of the blob object
+            x            =  horizontal position of the center of blob object in pixels relative to mycanvas
+            y            =  vertical position of the center of blob object in pixels relative to mycanvas
+            color        =  color of the blob object
+            xChange      =  the amount and direction(sign) with which the blob will move horizontally.-ve means it will go to left.
+            yChange      =  the amount and direction(sign) with which the blob will move vertically.-ve means it will go to top.
+            move()       =  it will move the blob object in the canvas
+            draw()       =  draws the blob object
+            deleteBlob() =  will delete the blob object from the array Blobs and delete the object*/
+            
+            class Blob{
+                constructor(color){
+                    this.size = 15;
+                    this.x = Math.trunc((Math.random() * (canvas.width-2*this.size))+this.size);
+                    this.y = Math.trunc((Math.random() * (canvas.height-2*this.size))+this.size);
+                    this.color = color;
+                    this.xChange = -1;
+                    this.yChange = -1;
+                    
+                }
+                
+                move(){
+                    if(Math.trunc(this.x) == canvas.width-this.size){
+                        this.deleteBlob();
+                    }
+                    else{
+                        if(Math.trunc(this.x+this.size) == canvas.width-bar.width-10 && this.y > bar.y && this.y < bar.y+bar.height){
+                            this.xChange *= -1;
+                            this.yChange  = mouseScrollDirection
+                        }
+                        if(this.x <= this.size){
+                            this.xChange *= -1;
+                        }
+                        if(this.y >= canvas.height-this.size || this.y <= this.size){
+                            this.yChange *= -1;
+                        }
+                    
+                        this.x += this.xChange;
+                        this.y += this.yChange;
+                    }
+                } 
+                
+                draw(){
+                    context.beginPath();
+                    context.arc(this.x,this.y,this.size, 0, 2 * Math.PI);
+                    context.fillStyle = this.color;
+                    context.fill();
+                    context.stroke();
+                }
+                
+                
+                deleteBlob(){
+                    var blobCount = Blobs.length;
+                    for(var i = 0; i < blobCount; i++){
+                        if(Blobs[i] == this){
+                            Blobs.splice(i,1);
+                        }
+                    }
+                    
+                    delete this;
+                }
+                
+            }
+            //-----------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            //The function which gets called when mouse scroll happens inside the mycanvas
+            function MouseWheelHandler(e){
+                var e = window.event || e; // old IE support
+	            mouseScrollDirection = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+                bar.moveBarWithMouse();
+               
+            }
+            //----------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            //This function clears mycanvas after specified time in second argument and draws the bar.It also draw and move the blob objects which are there in the Blobs array.
+            setInterval(function(){
+                context.clearRect(0,0, canvas.width-8, canvas.height);
+                bar.draw();
+                Blobs.forEach(function(blob){
+                    blob.draw();
+                    blob.move();
+                })
+                },1);
+            //----------------------------------------------------------------------------------------------------------------------
+            
+            
+            
+            //The function which gets called when clicked on the button.It switches the color and create the blob object and inserts it into array Blobs
+            function myfunction(){
+                var color ;
+                switch(colorSwitch){
+                    case 0:
+                        color = "yellow";
+                        break;
+                    case 1:
+                        color = "pink";
+                        break;
+                    case 2:
+                        color = "green";
+                        break;
+                }
+                colorSwitch = (colorSwitch+1)%3;
+                var newBlob = new Blob(color);
+                Blobs.push(newBlob);
+            }
+            //-----------------------------------------------------------------------------------------------------------------------
+            
+                        
+        </script>
+    </body>   
+
+</html>

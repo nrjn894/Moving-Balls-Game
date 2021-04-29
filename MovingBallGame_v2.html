@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            canvas{
+                border: 1px solid black;
+                margin : 50px 200px;
+                background-image: image("images/image1.jpg");
+            }
+        </style>
+    </head>
+    <body >
+        <canvas id="mycanvas" width="800" height="600" ></canvas>
+        <button onclick ="myfunction()">Click me</button>
+        
+        <script>
+            
+            const canvas = document.getElementById("mycanvas");
+            const context = canvas.getContext("2d");
+            
+            for (var i = 2; i <= canvas.height ; i+=4){
+                context.beginPath();
+                context.moveTo(canvas.width-8 , i);
+                context.lineTo(canvas.width , i-2);
+                context.moveTo(canvas.width-8 , i);
+                context.lineTo(canvas.width , i+2);
+                context.stroke();
+            }
+            
+            if (canvas.addEventListener) {
+	           canvas.addEventListener("mousewheel", MouseWheelHandler, false);
+	           canvas.addEventListener("DOMMouseScroll", MouseWheelHandler, false);
+            }
+            // IE 6/7/8
+            else canvas.attachEvent("onmousewheel", MouseWheelHandler);
+            
+    
+            
+            
+            /*--------------------------------For Blob------------------------------------------*/
+            var Blobs = new Array();
+            var colorSwitch = 0;
+            /*----------------------------------------------------------------------------------*/
+        
+            class Bar{
+                constructor(){
+                    this.y = 0;
+                    this.height = 200;
+                    this.width = 20;
+                    this.x = canvas.width-this.width-10;
+                    this.color = "blue";
+                }
+                
+               
+                draw(){
+                    context.fillRect(this.x,this.y,this.width,this.height);
+                    context.fillStyle = this.color;
+                    //context.fill();
+                }
+            
+                moveBarWithMouse(amount){
+                    var newY = this.y + amount;
+                    if( newY < 0){
+                        newY = 0;
+                    }
+                    else if(newY > canvas.height-this.height){
+                        newY = canvas.height-this.height;
+                    }
+                    this.y = newY;
+                }
+                
+            }
+            
+            var bar = new Bar();
+            
+            /*-----------------------------------Blob Class------------------------------------------------*/
+            class Blob{
+                constructor(color){
+                    this.size = 10;
+                    this.x = (Math.random() * (canvas.width-2*this.size))+this.size;
+                    this.y = (Math.random() * (canvas.height-2*this.size))+this.size;
+                    this.color = color;
+                    this.xChange = -1;
+                    this.yChange = -1;
+                    
+                }
+                
+                move(){
+                    if(Math.trunc(this.x) == canvas.width-this.size){
+                        this.deleteBlob();
+                    }
+                    else{
+
+                        if(this.x <= this.size || (Math.trunc(this.x) == canvas.width-bar.width-10 && this.y > bar.y && this.y <    bar.y +bar.height )){
+                            this.xChange *= -1;
+                        }
+                        if(this.y >= canvas.height-this.size || this.y <= this.size){
+                            this.yChange *= -1;
+                        }
+                    
+                        this.x += this.xChange;
+                        this.y += this.yChange;
+                    }
+                } 
+                
+                draw(){
+                    context.beginPath();
+                    context.arc(this.x,this.y,this.size, 0, 2 * Math.PI);
+                    context.fillStyle = this.color;
+                    context.fill();
+                    context.stroke();
+                }
+                
+                
+                deleteBlob(){
+                    var blobCount = Blobs.length;
+                    for(var i = 0; i < blobCount; i++){
+                        if(Blobs[i] == this){
+                            Blobs.splice(i,1);
+                        }
+                    }
+                    
+                    delete this;
+                }
+                
+            }
+            /*---------------------------------------------------------------------------------------------*/
+            
+            function MouseWheelHandler(e){
+                var e = window.event || e; // old IE support
+	            var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+                bar.moveBarWithMouse(delta*20);
+            }
+            
+            
+            setInterval(function(){
+                context.clearRect(0,0, canvas.width-8, canvas.height);
+                bar.draw();
+                Blobs.forEach(function(blob){
+                    blob.draw();
+                    blob.move();
+                })
+                },1);
+            
+            
+            function myfunction(){
+                var color ;
+                switch(colorSwitch){
+                    case 0:
+                        color = "red";
+                        break;
+                    case 1:
+                        color = "blue";
+                        break;
+                    case 2:
+                        color = "green";
+                        break;
+                }
+                colorSwitch = (colorSwitch+1)%3;
+                var newBlob = new Blob(color);
+                Blobs.push(newBlob);
+            }
+            
+            
+        </script>
+    </body>   
+
+</html>
